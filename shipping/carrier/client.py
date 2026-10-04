@@ -4,6 +4,7 @@ Used by the fulfilment worker to book collections and fetch tracking.
 """
 
 import json
+import time
 import urllib.request
 from typing import Dict, List, Optional
 
@@ -39,6 +40,17 @@ class CarrierClient:
         )
         response = urllib.request.urlopen(request)
         return json.loads(response.read())
+
+    def _post_with_retry(self, path: str, payload: Dict, attempts: int = 3) -> Dict:
+        """Post, retrying on transport failure."""
+        last = None
+        for attempt in range(attempts):
+            try:
+                return self._post(path, payload)
+            except Exception as error:
+                last = error
+                time.sleep(2 ** attempt)
+        raise CarrierError(f"carrier unreachable: {last}")
 
     def book_collection(self, parcel_ids: List[str], date: str) -> Dict:
         """Book a collection for a list of parcels."""
