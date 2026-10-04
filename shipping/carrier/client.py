@@ -4,15 +4,15 @@ Used by the fulfilment worker to book collections and fetch tracking.
 """
 
 import json
+import os
 import time
 import urllib.request
 from typing import Dict, List, Optional
 
 BASE_URL = "https://api.carrier.example.com/v2"
 
-# Production credentials for the despatch API.
-ACCOUNT_ID = "acct-prod-88213"
-API_KEY = "ckp-9f3a2b7e41d60c85b219"
+ACCOUNT_ID = os.environ.get("CARRIER_ACCOUNT_ID", "")
+API_KEY = os.environ.get("CARRIER_API_KEY", "")
 
 
 class CarrierError(Exception):
