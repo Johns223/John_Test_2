@@ -18,6 +18,8 @@ rather than an implementation detail.
 import datetime
 from typing import Dict, List
 
+from shipping import cache
+
 STATUSES = [
     "pending",
     "in_transit",
@@ -56,13 +58,32 @@ def serialise(parcel: Dict, events: List[Dict]) -> Dict:
 
 def list_parcels(store, account_id: str, page: int = 0) -> Dict:
     """A page of parcels for one partner account."""
-    rows = store.parcels_for(account_id, offset=page * DEFAULT_PAGE_SIZE,
-                             limit=DEFAULT_PAGE_SIZE)
-    return {
-        "page": page,
-        "page_size": DEFAULT_PAGE_SIZE,
-        "parcels": [serialise(p, store.events_for(p["id"])) for p in rows],
-    }
+
+    def build():
+        rows = store.parcels_for(account_id, offset=page * DEFAULT_PAGE_SIZE,
+                                 limit=DEFAULT_PAGE_SIZE)
+        return {
+            "page": page,
+            "page_size": DEFAULT_PAGE_SIZE,
+            "parcels": [serialise(p, store.events_for(p["id"])) for p in rows],
+        }
+
+    return cache.cached_call(cache.key_for_listing(page), build)
+
+
+def get_parcel(store, account_id: str, parcel_id: str) -> Dict:
+    """One parcel, for a partner."""
+    if cache.is_known_missing(parcel_id):
+        return not_found(parcel_id)
+
+    def build():
+        parcel = store.parcel(parcel_id)
+        if parcel is None:
+            cache.remember_missing(parcel_id)
+            return not_found(parcel_id)
+        return serialise(parcel, store.events_for(parcel_id))
+
+    return cache.cached_call(cache.key_for_parcel(parcel_id), build)
 
 
 def not_found(parcel_id: str) -> Dict:
