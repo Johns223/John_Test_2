@@ -20,6 +20,8 @@ import datetime
 import logging
 from typing import Any, Dict, List
 
+from shipping import notify
+
 logger = logging.getLogger(__name__)
 
 FREE_STORAGE_DAYS = 3
@@ -63,16 +65,14 @@ def run(store, notifier) -> Dict[str, int]:
 
         if arrived < _cutoff(ABANDONMENT_DAYS):
             store.update_parcel(parcel["id"], status="returned_to_sender")
+            notify.send(store, parcel, "returned", channel="push")
             returned += 1
             continue
 
         fee = storage_fee(parcel)
         if fee > 0:
             store.charge(parcel["id"], fee)
-            notifier.send(
-                parcel["recipient_email"],
-                f"Your parcel is waiting. Storage so far: GBP {fee:.2f}",
-            )
+            notify.send(store, parcel, "storage_fee")
             charged += 1
 
     logger.info("nightly sweep done: charged=%s returned=%s", charged, returned)
