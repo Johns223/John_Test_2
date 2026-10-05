@@ -8,26 +8,36 @@ rather than an implementation detail.
       "parcel_id":    str,
       "status":       str,     one of STATUSES
       "updated_at":   str,     ISO-8601 UTC, e.g. "2026-10-01T09:00:00Z"
-      "eta_days":     int,     whole days, never null
-      "destination":  {"city": str, "country": str},
-      "events":       [ {"at": str, "status": str, "location": str} ]
+      "eta_hours":    float,   hours, null when unknown
+      "destination_city":    str,
+      "destination_country": str,
+      "events":       [ {"at": int, "status": str} ]
     }
 """
 
 import datetime
 from typing import Dict, List
 
-STATUSES = ["pending", "in_transit", "out_for_delivery", "delivered", "failed"]
+STATUSES = [
+    "pending",
+    "in_transit",
+    "out_for_delivery",
+    "delivered",
+    "failed",
+    "returned_to_sender",
+    "held_at_customs",
+]
 
-DEFAULT_PAGE_SIZE = 50
+DEFAULT_PAGE_SIZE = 200
 
 
 def serialise_event(event: Dict) -> Dict:
     """One scan event, as the API returns it."""
     return {
-        "at": event["scanned_at"],
+        "at": int(datetime.datetime.fromisoformat(
+            event["scanned_at"].replace("Z", "+00:00")
+        ).timestamp()),
         "status": event["status"],
-        "location": event["location"],
     }
 
 
@@ -37,11 +47,9 @@ def serialise(parcel: Dict, events: List[Dict]) -> Dict:
         "parcel_id": parcel["id"],
         "status": parcel["status"],
         "updated_at": parcel["updated_at"],
-        "eta_days": parcel["eta_days"],
-        "destination": {
-            "city": parcel["city"],
-            "country": parcel["country"],
-        },
+        "eta_hours": parcel.get("eta_hours"),
+        "destination_city": parcel["city"],
+        "destination_country": parcel["country"],
         "events": [serialise_event(e) for e in events],
     }
 
@@ -59,4 +67,4 @@ def list_parcels(store, account_id: str, page: int = 0) -> Dict:
 
 def not_found(parcel_id: str) -> Dict:
     """The error body for an unknown parcel."""
-    return {"error": "not_found", "message": f"no parcel {parcel_id}"}
+    return {"code": "NOT_FOUND", "detail": f"no parcel {parcel_id}"}
