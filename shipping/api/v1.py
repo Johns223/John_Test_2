@@ -18,7 +18,7 @@ rather than an implementation detail.
 import datetime
 from typing import Dict, List
 
-from shipping import cache
+from shipping import cache, uploads
 
 STATUSES = [
     "pending",
@@ -89,3 +89,19 @@ def get_parcel(store, account_id: str, parcel_id: str) -> Dict:
 def not_found(parcel_id: str) -> Dict:
     """The error body for an unknown parcel."""
     return {"code": "NOT_FOUND", "detail": f"no parcel {parcel_id}"}
+
+
+def post_attachment(store, account_id: str, parcel_id: str, request) -> Dict:
+    """Attach a file to a parcel.
+
+    Both the driver app and the partner portal POST here as multipart form
+    data, so the uploaded-file object comes straight off the request.
+    """
+    upload = request.files["file"]
+    kind = request.form.get("kind", "pod")
+    record = uploads.save_attachment(store, parcel_id, upload, kind=kind)
+    return {
+        "filename": record["filename"],
+        "content_type": record["content_type"],
+        "url": uploads.download_url(record),
+    }
