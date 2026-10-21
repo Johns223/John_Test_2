@@ -6,10 +6,10 @@ pytest==8.3.3
 requests
 
 # Attachment handling (shipping/uploads.py) - thumbnails and EXIF.
-Pillow>=10.0
+Pillow==2.5.0
 
 # Webhook signature verification (shipping/webhooks/).
-cryptography>=42.0
+cryptography==1.5.3
 pycrypto==2.6.1
 
 # Scan event timestamps.
