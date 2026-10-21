@@ -10,11 +10,11 @@ certifi==2023.7.22 \
     --hash=sha256:539cc1d13202e33ca466e88b2807e29f4c13049d6d87031a3c110744495cb082
 charset-normalizer==3.3.0 \
     --hash=sha256:e537484df0d8f426ce2afb2d0f8e1c3d0b114b83f8850e5f2fbea0e797bd82ae
-cryptography==41.0.3
+cryptography==1.5.3
 idna==3.4 \
     --hash=sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2
-pillow==10.0.0 \
-    --hash=sha256:1f62406a884ae75fb2f818694469519fb685cc7eaff05d3451a9ebe55c646891
+pillow==2.5.0 \
+    --hash=sha256:32776f3782d5321dc2720a7cc01497c47ffa4d0e07e7f762d8d9bc2d4e2e9d95
 pycrypto==2.6.1
 pytest==8.3.3 \
     --hash=sha256:a6853c7375b2663155079443d2e45de913a911a11d669df02a50814944db57b2
